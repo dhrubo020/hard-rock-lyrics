@@ -11,6 +11,7 @@ function start(e) {
     document.getElementById("search-result").innerHTML = loading;
     var searchInput = document.getElementById("text-search").value;
     console.log(searchInput)
+    
     var fetchUrl = `https://api.lyrics.ovh/suggest/${searchInput}`;
 
     fetch(fetchUrl)
@@ -56,19 +57,24 @@ function displaySuggestion(allData) {
     display.innerHTML = "";
     document.querySelector('.single-result').style.display = "block";
     for (let i = 0; i < list.length; i++) {
-        const { title, albumTitle, albumImage, artistName, artistImage } = list[i];
+        let { title, albumTitle, albumImage, artistName, artistImage } = list[i];
+        
+        // handling ( ' ) comma in variable
+        title = title.replace(/'/g, " ");
+        artistName = artistName.replace(/'/g, " ");
+
         display.innerHTML +=
-            `<div class="col-md-6 col-sm-6 result">
+            `<div class="col-md-6 result ">
                 <h3 class="lyrics-name"><span id="title">${title}</span></h3>
                 <p class="author lead">Artist : <span id="artistName">${artistName}</span></p>
                 <p class="author lead">Album : <span id="albumTitle">${albumTitle}</span></p>
             </div>
-            <div class="col-md-3 col-sm-3 ">
+            <div class="col-md-3  ">
                 <img src="${artistImage}" class="img-fluid">
                 <img src="${albumImage}" class="img-fluid">
             </div>
-            <div class ="col-md-3 col-sm-3 text-md-right text-center">
-                <a href="#" onclick="getLyrics('${title}','${artistName}','${albumImage}','${artistImage}')" class="btn btn-success">Get Lyrics</a>
+            <div class ="col-md-3  text-md-right text-center">
+                <a href="#/" onclick="getLyrics('${title}','${artistName}','${albumImage}','${artistImage}')" class="btn btn-success">Get Lyrics</a>
             </div>
             <div class="bottom-line"></div>`
     }
@@ -76,29 +82,40 @@ function displaySuggestion(allData) {
 }
 // display suggestions  end ---------------------------------------------------displaySuggestion() end------------------------------------------
 
+
+
 // get the lyrics from clicked suggestions  ---------------------------------------getLyrics()--------------------------------------------------------
 
 const getLyrics = (title, artistName, albumImage, artistImage) => {
     console.log(title, artistName);
     var fetchUrl = `https://api.lyrics.ovh/v1/${artistName}/${title}`;
+    console.log(fetchUrl)
+
     document.getElementById("song-image").innerHTML = loading;
 
     fetch(fetchUrl)
-        .then(response => response.json())
-        .then(data => displayLyrics(data, title, artistName, albumImage, artistImage))
+        .then(response => response.ok ? response.json() : console.log(response.status))
+        .then(data =>  displayLyrics(data, title, artistName, albumImage, artistImage))
         .catch(err => console.log(err))
 }
 // get the lyrics from clicked suggestions  ---------------------------------------getLyrics() end--------------------------------------------------------
 
+
+
 // display lyrics from getLyrics  ---------------------------------------displayLyrics()--------------------------------------------------------
 
 const displayLyrics = (data, title, artistName, albumImage, artistImage) => {
-
+    document.querySelector('.single-result').style.display = "none";
     document.getElementById("song-image").innerHTML = `<img src="${albumImage}" class="img-fluid"> <img src="${artistImage}" class="img-fluid">`
     document.getElementById("get-title").innerText = title;
     document.getElementById("get-artist").innerText = " - " + artistName;
-
-    if (data.lyrics) {
+    document.getElementById("get-lyrics").innerText = "";
+    document.getElementById("search-result").innerText = "";
+    
+    if(data == undefined){
+        document.getElementById("get-lyrics").innerText = "Sorry! Lyrics is not found.";
+    }
+    else if (data.lyrics) {
         document.getElementById("get-lyrics").innerText = data.lyrics;
     } else {
         document.getElementById("get-lyrics").innerText = "Sorry! Lyrics is not found.";
